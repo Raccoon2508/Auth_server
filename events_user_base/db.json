@@ -1,0 +1,102 @@
+{
+  "users": [
+    {
+      "name": "Nikita",
+      "id": 1,
+      "email": "asdf@mail.com",
+      "pass": "1234"
+    }
+  ],
+  "usersEvents": [
+    {
+      "userID": 1,
+      "eventID": 1584255707425
+    }
+  ],
+  "events": [
+    {
+      "comment": "it's angular",
+      "day": 20,
+      "id": 1584255707425,
+      "month": 2,
+      "priority": "normal",
+      "timeFrom": "23:24",
+      "timeTo": "23:23",
+      "title": "Hello",
+      "userId": 1,
+      "year": 2020
+    },
+    {
+      "id": 1584255707555,
+      "userId": 1,
+      "year": 2020,
+      "month": 3,
+      "day": 1,
+      "timeFrom": "23:24",
+      "timeTo": "23:23",
+      "title": "Hell23412341",
+      "comment": "it's",
+      "priority": "normal"
+    },
+    {
+      "id": 1587985690210,
+      "userId": 1,
+      "year": 2020,
+      "month": 3,
+      "day": 3,
+      "timeFrom": "23:14",
+      "timeTo": "21:34",
+      "title": "фывфыв",
+      "comment": "фывфывфв",
+      "priority": "normal"
+    },
+    {
+      "id": 1587985701020,
+      "userId": 1,
+      "year": 2020,
+      "month": 3,
+      "day": 3,
+      "timeFrom": "12:34",
+      "timeTo": "23:04",
+      "title": "ыфваыва",
+      "comment": "ываываыва",
+      "priority": "normal"
+    },
+    {
+      "id": 1587988352701,
+      "userId": 1,
+      "year": 2020,
+      "month": 3,
+      "day": 2,
+      "timeFrom": "02:34",
+      "timeTo": "23:04",
+      "title": "ывафыва",
+      "comment": "фывафывафыа",
+      "priority": "normal"
+    },
+    {
+      "id": 1588065918468,
+      "userId": 1,
+      "year": 2020,
+      "month": 3,
+      "day": 3,
+      "timeFrom": "12:34",
+      "timeTo": "21:34",
+      "title": "sdafsadfsa",
+      "comment": "dfasdfasdfsdf",
+      "priority": "low"
+    },
+    {
+      "id": 1588065932420,
+      "userId": 1,
+      "year": 2020,
+      "month": 3,
+      "day": 3,
+      "timeFrom": "12:34",
+      "timeTo": "23:15",
+      "title": "sadfasdf",
+      "comment": "asdfasdfas",
+      "priority": "high"
+    }
+  ]
+}
