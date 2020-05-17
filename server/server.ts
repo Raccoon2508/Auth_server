@@ -1,14 +1,23 @@
+const cors = require('cors');
 const express: Function = require('express');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
+
 app.listen(3000, () => {
     console.log ('listen on 3000 port')
+});
+app.use(cors());
+
+app.use('',(req, res, next)=>{
+    console.log('server on work');
+    next();
 })
 
-let req  = app.use('/login', (req, res, next) => {
+let req  = app.use('/api', (req, res, next) => {
     if(req.query.email && req.query.pass) {
+        console.log(req.query.email, req.query.pass);
         fs.promises.readFile('db.json', 'utf-8')
         .then(data => {
            const users = JSON.parse(data).users;
@@ -17,7 +26,7 @@ let req  = app.use('/login', (req, res, next) => {
             console.log(user);
             console.log("Done!")
             const token = jwt.sign(user, 'secret', { expiresIn: '30d' });
-            res.status(200).json({'userID': user.id, 'jwt': token});
+            res.status(200).json({'userID': user.id, 'jwt': token, 'userName': user.name});
            } else {
             console.log(Error('No user for login'));
             res.status(400).send({'Error': 'no user'});
@@ -42,5 +51,3 @@ function findUser(email: string, pass: string): void {
        }
     });
 }
-
-
