@@ -1,19 +1,49 @@
+import { JwtHeader } from 'jsonwebtoken';
+const bodyParser = require('body-parser');
+
 const cors = require('cors');
-const express: Function = require('express');
+const express = require('express');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
-
 const app = express();
+app.use(cors());
 
 app.listen(3000, () => {
     console.log ('listen on 3000 port')
 });
-app.use(cors());
 
-app.use('',(req, res, next)=>{
-    console.log('server on work');
-    next();
-})
+const readFile = (
+    callback,
+    returnJson = false,
+    filePath = 'db.json',
+    encoding = "utf8"
+  ) => {
+    fs.readFile(filePath, encoding, (err, data) => {
+      if (err) {
+        throw err;
+      }
+
+      callback(returnJson ? JSON.parse(data) : data);
+    });
+  };
+
+const writeFile = (
+    fileData,
+    callback,
+    filePath = 'db.json',
+    encoding = "utf8"
+  ) => {
+    fs.writeFile(filePath, fileData, encoding, (err) => {
+      if (err) {
+        throw err;
+      }
+
+      callback();
+    });
+};
+
+app.use(express.urlencoded({ extended: true }));
+const parsedReq = app.use(bodyParser.json());
 
 let req  = app.use('/api', (req, res, next) => {
     if(req.query.email && req.query.pass) {
@@ -21,6 +51,7 @@ let req  = app.use('/api', (req, res, next) => {
         fs.promises.readFile('db.json', 'utf-8')
         .then(data => {
            const users = JSON.parse(data).users;
+           console.log(users);
            const user = users.find((user) => user.email === req.query.email && user.pass === req.query.pass);
            if (user) {
             console.log(user);
@@ -29,7 +60,7 @@ let req  = app.use('/api', (req, res, next) => {
             res.status(200).json({'userID': user.id, 'jwt': token, 'userName': user.name});
            } else {
             console.log(Error('No user for login'));
-            res.status(400).send({'Error': 'no user'});
+            res.status(200).send({'Error': 'no user'});
            }
         });
         }
@@ -51,3 +82,120 @@ function findUser(email: string, pass: string): void {
        }
     });
 }
+
+function findUserEvents(id: number, token: string): void {
+    const decodedJwt = jwt.verify(token, 'secret');
+    console.log('Verifiing');
+
+    fs.promises.readFile('db.json', 'utf-8')
+    .then(data => {
+       const usersEvents = JSON.parse(data).usersEvents;
+       const eventsId = usersEvents.filter((item) => item.id === id);
+       if(user[0]) {
+        console.log(user[0]);
+       } else {
+           throw new Error('no user');
+       }
+    });
+};
+
+let reqEvents  = app.get('/', (req, res, next) =>{
+  function eventsLoading(currentUserObj): void {
+     fs.promises.readFile('db.json', 'utf-8')
+        .then(data => {
+           const eventsUsersBase = JSON.parse(data).usersEvents.filter((item) =>
+           item.userID === currentUserObj.id);
+           let eventsID = [];
+           eventsUsersBase.forEach(item => eventsID.push(item.eventID));
+           console.log(eventsID);
+           const eventsBase = JSON.parse(data).events;
+           let currentUserEvents = []; 
+           eventsID.forEach((item) => {
+                eventsBase.forEach(event => {
+                    if (event.id === item) { currentUserEvents.push(event) }
+                });
+           });
+           console.log(currentUserEvents);
+           res.status(200).send(currentUserEvents);
+        });
+    }
+    if(req.headers.authorization) {
+        let currentUser = jwt.verify(req.headers.authorization, 'secret');
+        eventsLoading(currentUser);
+    }
+});
+
+app.post('*/add',(req, res, next) =>{
+    console.log('Here');
+    readFile((data) => {
+        let parsedData = JSON.parse(data);
+        let eventsArray = parsedData.events;
+        let eventsUserArray = parsedData.usersEvents;
+        const newEventPosition = eventsArray.length;
+        const newEventUserPosition = eventsUserArray.length;
+        eventsArray[newEventPosition] = req.body;
+        let {userId, id} = req.body;
+        eventsUserArray[newEventUserPosition] = {userID: userId, eventID: id};
+        parsedData.events = eventsArray;
+        parsedData.usersEvents = eventsUserArray;
+        data = JSON.stringify(parsedData, null, 2);
+        writeFile(data, () => {
+            res.status(200).send('event added');
+        });
+    });
+});
+
+app.post('*/edit',(req, res) =>{
+  readFile((data) => {
+      let parsedData = JSON.parse(data);
+      let index: number = null;
+      (parsedData.events).forEach((x,i) => {
+        if (x.id === req.body.id) { index = i; }
+      });
+      if (index + 1) {parsedData.events[index] = req.body; }
+      data = JSON.stringify(parsedData, null, 2);
+      writeFile(data, () => {
+          res.status(200).send('event edited');
+      });
+  });
+});
+
+console.log('here')
+
+app.post('*/new-user', (req, res, next) => {
+  readFile((data) => {
+    let parsedData: {[x: string]: {}[]} = JSON.parse(data);
+    let newUserData:{[x: string]: string|number} = req.body;
+    let usersBase: {}[] = parsedData.users;
+    if (usersBase.some((item: {[x: string]: string|number}) => {
+                      return item.email === newUserData.email;
+                      })){
+                        console.log('user exists');
+                        next();
+                      }
+    newUserData.id =  parsedData.users.length + 1;
+    parsedData.users[parsedData.users.length] = newUserData;
+    data = JSON.stringify(parsedData, null, 2);
+    writeFile(data, () => {
+      res.status(200).send('user created');
+  });
+
+  });
+});
+
+app.get('*/users-base', (req, res, next) =>{
+  readFile((data) => {
+    let usersBase = JSON.parse(data).users;
+    console.log('usersData', usersBase);
+    res.status(200).send(usersBase);
+  });
+});
+
+
+app.get('*/users-events-base', (req, res, next) =>{
+  readFile((data) => {
+    let usersEventsBase = JSON.parse(data).usersEvents;
+    console.log(usersEventsBase);
+    res.status(200).send(usersEventsBase);
+  });
+});
