@@ -199,3 +199,23 @@ app.get('*/users-events-base', (req, res, next) =>{
     res.status(200).send(usersEventsBase);
   });
 });
+
+app.post('*/invite-users', (req, res, next) => {
+  readFile((data) => {
+    let parsedData: {[x: string]: {}[]} = JSON.parse(data);
+    let inventedUsersData:{[x: string]: string|number}[] = req.body;
+    let usersEventsBase: {}[] = parsedData.usersEvents;
+    let concatArr: {[x: string]: string|number}[] = inventedUsersData.concat(usersEventsBase);
+    let set = new Set(concatArr);
+    parsedData.usersEvents = Array.from(set);
+    console.log(parsedData.usersEvents);
+    data = JSON.stringify(parsedData, null, 2);
+    writeFile(data, () => {
+      res.status(200).send('invented users added');
+    });
+    
+    })
+    
+  });
+
+ 
