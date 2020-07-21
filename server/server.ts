@@ -18,7 +18,7 @@ const readFile = (
     filePath = 'db.json',
     encoding = "utf8"
   ) => {
-    fs.readFile(filePath, encoding, (err, data) => {
+    setTimeout(fs.readFile, 0, filePath, encoding, (err, data) => {
       if (err) {
         throw err;
       }
@@ -48,8 +48,7 @@ const parsedReq = app.use(bodyParser.json());
 let req  = app.use('/api', (req, res, next) => {
     if(req.query.email && req.query.pass) {
         console.log(req.query.email, req.query.pass);
-        fs.promises.readFile('db.json', 'utf-8')
-        .then(data => {
+        readFile((data) => {
            const users = JSON.parse(data).users;
            console.log(users);
            const user = users.find((user) => user.email === req.query.email && user.pass === req.query.pass);
@@ -71,8 +70,7 @@ let req  = app.use('/api', (req, res, next) => {
 });
 
 function findUser(email: string, pass: string): void {
-    fs.promises.readFile('db.json', 'utf-8')
-    .then(data => {
+  readFile((data) => {
        const users = JSON.parse(data).users;
        const user = users.filter((user) => user.email === email && user.pass === pass);
        if(user[0]) {
@@ -87,8 +85,7 @@ function findUserEvents(id: number, token: string): void {
     const decodedJwt = jwt.verify(token, 'secret');
     console.log('Verifiing');
 
-    fs.promises.readFile('db.json', 'utf-8')
-    .then(data => {
+    readFile((data) => {
        const usersEvents = JSON.parse(data).usersEvents;
        const eventsId = usersEvents.filter((item) => item.id === id);
        if(user[0]) {
@@ -101,8 +98,7 @@ function findUserEvents(id: number, token: string): void {
 
 let reqEvents  = app.get('/', (req, res, next) =>{
   function eventsLoading(currentUserObj): void {
-     fs.promises.readFile('db.json', 'utf-8')
-        .then(data => {
+    readFile((data) => {
            const eventsUsersBase = JSON.parse(data).usersEvents.filter((item) =>
            item.userID === currentUserObj.id);
            let eventsID = [];
@@ -133,14 +129,24 @@ app.post('*/add',(req, res, next) =>{
         let eventsUserArray = parsedData.usersEvents;
         const newEventPosition = eventsArray.length;
         const newEventUserPosition = eventsUserArray.length;
-        eventsArray[newEventPosition] = req.body;
-        let {userId, id} = req.body;
+        eventsArray[newEventPosition] = req.body.eventInfo;
+        const eventId: string = req.body.eventInfo.id;
+        let {userId, id} = req.body.eventInfo;
         eventsUserArray[newEventUserPosition] = {userID: userId, eventID: id};
         parsedData.events = eventsArray;
         parsedData.usersEvents = eventsUserArray;
+        let inventedUsersData:{ [x: string]: string|number}[] = (req.body.invitedInfo)
+         .map(x => {
+         let {id} = x;
+         return {userID: id, eventID: eventId};
+        });
+        let concatArr: {[x: string]: string|number}[] = inventedUsersData.concat(eventsUserArray);
+        let set = new Set(concatArr);
+        console.log('invitedUsers', concatArr);
+        parsedData.usersEvents = Array.from(set);
         data = JSON.stringify(parsedData, null, 2);
         writeFile(data, () => {
-            res.status(200).send('event added');
+          res.status(200).send('event added');
         });
     });
 });
@@ -150,12 +156,28 @@ app.post('*/edit',(req, res) =>{
       let parsedData = JSON.parse(data);
       let index: number = null;
       (parsedData.events).forEach((x,i) => {
-        if (x.id === req.body.id) { index = i; }
+        if (x.id === req.body.event.id) { index = i; }
       });
-      if (index + 1) {parsedData.events[index] = req.body; }
+      if (index + 1) {parsedData.events[index] = req.body.event; }
+      let deletedParticipant: {[x: string]: string|number}[] = req.body.deletedUsers;
+      let arr = parsedData.usersEvents;
+      if (deletedParticipant.length) {
+          deletedParticipant.forEach(item => {
+          arr = parsedData.usersEvents.filter(x => {
+          if(x.userID === item.userID && x.eventID === item.eventID) {
+            return false;
+          }
+          return true;
+          });
+        });
+      }
+      console.log('arr', arr);
+      console.log('deletedUsers', deletedParticipant);
+      let set = new Set(arr);
+      parsedData.usersEvents = Array.from(set);
       data = JSON.stringify(parsedData, null, 2);
-      writeFile(data, () => {
-          res.status(200).send('event edited');
+      setTimeout(writeFile, 0, data, () => {
+        res.status(200).send('invent edited');
       });
   });
 });
@@ -200,22 +222,20 @@ app.get('*/users-events-base', (req, res, next) =>{
   });
 });
 
-app.post('*/invite-users', (req, res, next) => {
+app.post('*/delete-event', (req, res) => {
   readFile((data) => {
-    let parsedData: {[x: string]: {}[]} = JSON.parse(data);
-    let inventedUsersData:{[x: string]: string|number}[] = req.body;
-    let usersEventsBase: {}[] = parsedData.usersEvents;
-    let concatArr: {[x: string]: string|number}[] = inventedUsersData.concat(usersEventsBase);
-    let set = new Set(concatArr);
-    parsedData.usersEvents = Array.from(set);
-    console.log(parsedData.usersEvents);
-    data = JSON.stringify(parsedData, null, 2);
-    writeFile(data, () => {
-      res.status(200).send('invented users added');
+    let parsedData = JSON.parse(data)
+    let usersEventsBase = parsedData.usersEvents;
+    let {userID: delUser, eventID: delEvent} = req.body;
+    parsedData.usersEvents = usersEventsBase
+    .filter(x => {
+      if (x.eventID === delEvent && x.userID === delUser) {return false;
+      } else {return true; }
     });
-    
-    })
-    
+    data = JSON.stringify(parsedData, null, 2);
+    console.log(parsedData.usersEvents);
+    writeFile(data, () => {
+      res.status(200).send('event deleted');
   });
-
- 
+  });
+});
