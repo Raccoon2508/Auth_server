@@ -47,6 +47,12 @@
       "email": "123@mail.ru",
       "pass": "123",
       "id": 8
+    },
+    {
+      "name": "Mikita",
+      "email": "11@mail.ru",
+      "pass": "12345",
+      "id": 9
     }
   ],
   "usersEvents": [
@@ -127,10 +133,6 @@
       "eventID": 1595238308779
     },
     {
-      "userID": 1,
-      "eventID": 1595238308779
-    },
-    {
       "userID": 8,
       "eventID": 1595236026835
     },
@@ -144,10 +146,6 @@
     },
     {
       "userID": 2,
-      "eventID": 1595236026835
-    },
-    {
-      "userID": 1,
       "eventID": 1595236026835
     },
     {
@@ -172,10 +170,6 @@
     },
     {
       "userID": 3,
-      "eventID": 1595235764988
-    },
-    {
-      "userID": 1,
       "eventID": 1595235764988
     },
     {
@@ -276,35 +270,15 @@
     },
     {
       "userID": 1,
-      "eventID": 1584255707555
-    },
-    {
-      "userID": 1,
       "eventID": 1587985690210
     },
     {
       "userID": 1,
       "eventID": 1587985690210
-    },
-    {
-      "userID": 1,
-      "eventID": 1593338403347
     },
     {
       "userID": 1,
       "eventID": 1595232375006
-    },
-    {
-      "userID": 1,
-      "eventID": 1595233295559
-    },
-    {
-      "userID": 1,
-      "eventID": 1595234195432
-    },
-    {
-      "userID": 1,
-      "eventID": 1595234333654
     },
     {
       "userID": 1,
@@ -332,23 +306,19 @@
     },
     {
       "userID": 1,
-      "eventID": 1595235764988
-    },
-    {
-      "userID": 1,
       "eventID": 1595235827869
     },
     {
       "userID": 1,
-      "eventID": 1595236026835
-    },
-    {
-      "userID": 1,
-      "eventID": 1595238308779
-    },
-    {
-      "userID": 1,
       "eventID": 1595329505905
+    },
+    {
+      "userID": 1,
+      "eventID": 1595341119705
+    },
+    {
+      "userID": 9,
+      "eventID": 1595341282197
     }
   ],
   "events": [
@@ -1057,6 +1027,30 @@
       "timeTo": "23:34",
       "title": "234234ываыва",
       "comment": "324234234ываыва",
+      "priority": "normal"
+    },
+    {
+      "id": 1595341119705,
+      "userId": 1,
+      "year": 2020,
+      "month": 2,
+      "day": 1,
+      "timeFrom": "11:11",
+      "timeTo": "11:11",
+      "title": "11123123123",
+      "comment": "123123123123123123",
+      "priority": "normal"
+    },
+    {
+      "id": 1595341282197,
+      "userId": 9,
+      "year": 2020,
+      "month": 5,
+      "day": 7,
+      "timeFrom": "11:11",
+      "timeTo": "11:11",
+      "title": "11123123123",
+      "comment": "sdfsdfsdfsdfsdf",
       "priority": "normal"
     }
   ]
