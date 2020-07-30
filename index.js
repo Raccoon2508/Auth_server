@@ -1,3 +1,4 @@
+"use strict";
 const bodyParser = require('body-parser');
 const express = require('express');
 const cors = require('cors');
@@ -8,7 +9,7 @@ app.use(cors());
 app.listen(3000, () => {
     console.log('listen on 3000 port');
 });
-const readFile = (callback, returnJson = false, filePath = 'db.json', encoding = 'utf8') => {
+let readFile = (callback, returnJson = false, filePath = 'db.json', encoding = 'utf8') => {
     setTimeout(fs.readFile, 0, filePath, encoding, (err, data) => {
         if (err) {
             throw err;
@@ -16,7 +17,7 @@ const readFile = (callback, returnJson = false, filePath = 'db.json', encoding =
         callback(returnJson ? JSON.parse(data) : data);
     });
 };
-const writeFile = (fileData, callback, filePath = 'db.json', encoding = 'utf8') => {
+let writeFile = (fileData, callback, filePath = 'db.json', encoding = 'utf8') => {
     fs.writeFile(filePath, fileData, encoding, (err) => {
         if (err) {
             throw err;
@@ -24,15 +25,15 @@ const writeFile = (fileData, callback, filePath = 'db.json', encoding = 'utf8') 
         callback();
     });
 };
-
+function checkJWT(req) {
+    return jwt.verify(req.headers.authorization, 'secret') ? true : false;
+}
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use('/api', (req, res) => {
+app.use('/api', (req, res, next) => {
     if (req.query.email && req.query.pass) {
-        console.log(req.query.email, req.query.pass);
         readFile((data) => {
             const users = JSON.parse(data).users;
-            console.log(users);
             const user = users.find((singleUser) => singleUser.email === req.query.email
                 && singleUser.pass === req.query.pass);
             if (user) {
@@ -40,23 +41,20 @@ app.use('/api', (req, res) => {
                 res.status(200).json({ 'userID': user.id, 'jwt': token, 'userName': user.name });
             }
             else {
-                console.log(Error('No user for login'));
                 res.status(200).send({ Error: 'no user' });
             }
         });
     }
     else {
         res.status(400);
-        console.log(Error('Some problem on login'));
     }
 });
-app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
     function eventsLoading(currentUserObj) {
         readFile((data) => {
             const eventsUsersBase = JSON.parse(data).usersEvents.filter((item) => item.userID === currentUserObj.id);
             let eventsID = [];
             eventsUsersBase.forEach(item => eventsID.push(item.eventID));
-            console.log(eventsID);
             const eventsBase = JSON.parse(data).events;
             let currentUserEvents = [];
             eventsID.forEach((item) => {
@@ -66,8 +64,7 @@ app.get('/', (req, res) => {
                     }
                 });
             });
-            console.log(currentUserEvents);
-            res.status(200).send(currentUserEvents);
+           res.status(200).send(currentUserEvents);
         });
     }
     if (req.headers.authorization) {
@@ -75,7 +72,7 @@ app.get('/', (req, res) => {
         eventsLoading(currentUser);
     }
 });
-app.post('*/add', (req, res) => {
+app.post('*/add', (req, res, next) => {
     readFile((data) => {
         let parsedData = JSON.parse(data);
         let eventsArray = parsedData.events;
@@ -95,7 +92,6 @@ app.post('*/add', (req, res) => {
         });
         let concatArr = invitedUsersData.concat(eventsUserArray);
         let set = new Set(concatArr);
-        console.log('invitedUsers', concatArr);
         parsedData.usersEvents = Array.from(set);
         data = JSON.stringify(parsedData, null, 2);
         writeFile(data, () => {
@@ -135,7 +131,7 @@ app.post('*/edit', (req, res) => {
         });
     });
 });
-app.post('*/new-user', (req, res) => {
+app.post('*/new-user', (req, res, next) => {
     readFile((data) => {
         let parsedData = JSON.parse(data);
         let newUserData = req.body;
@@ -154,17 +150,15 @@ app.post('*/new-user', (req, res) => {
         });
     });
 });
-app.get('*/users-base', (req, res) => {
+app.get('*/users-base', (req, res, next) => {
     readFile((data) => {
         let usersBase = JSON.parse(data).users;
-        console.log('usersData', usersBase);
         res.status(200).send(usersBase);
     });
 });
-app.get('*/users-events-base', (req, res) => {
+app.get('*/users-events-base', (req, res, next) => {
     readFile((data) => {
         let usersEventsBase = JSON.parse(data).usersEvents;
-        console.log(usersEventsBase);
         res.status(200).send(usersEventsBase);
     });
 });
@@ -183,7 +177,6 @@ app.post('*/delete-event', (req, res) => {
             }
         });
         data = JSON.stringify(parsedData, null, 2);
-        console.log(parsedData.usersEvents);
         writeFile(data, () => {
             res.status(200).send({ status: 'event deleted' });
         });
