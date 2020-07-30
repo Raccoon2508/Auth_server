@@ -1,147 +1,118 @@
 import { JwtHeader } from 'jsonwebtoken';
+import { User, SingleEvent, UserEventNode, FullEventsBase } from './interfaces';
+//const bodyParser = require('body-parser');
 const bodyParser = require('body-parser');
-
-const cors = require('cors');
-const express = require('express');
-const fs = require('fs');
-const jwt = require('jsonwebtoken');
-const app = express();
+const cors: any = require('cors');
+const express: any = require('express');
+const fs: any = require('fs');
+const jwt: any = require('jsonwebtoken');
+const app: any = express();
 app.use(cors());
 
 app.listen(3000, () => {
-    console.log ('listen on 3000 port')
+    console.log ('listen on 3000 port');
 });
 
-const readFile = (
+const readFile: Function = (
     callback,
     returnJson = false,
     filePath = 'db.json',
-    encoding = "utf8"
+    encoding = 'utf8'
   ) => {
     setTimeout(fs.readFile, 0, filePath, encoding, (err, data) => {
-      if (err) {
-        throw err;
-      }
-
+      if (err) { throw err; }
       callback(returnJson ? JSON.parse(data) : data);
     });
   };
 
-const writeFile = (
+const writeFile: Function = (
     fileData,
     callback,
     filePath = 'db.json',
-    encoding = "utf8"
+    encoding = 'utf8'
   ) => {
     fs.writeFile(filePath, fileData, encoding, (err) => {
       if (err) {
         throw err;
       }
-
       callback();
     });
 };
 
-app.use(express.urlencoded({ extended: true }));
-const parsedReq = app.use(bodyParser.json());
+function checkJWT(req: Request): Boolean {
+  return jwt.verify(req.headers.authorization, 'secret') ? true : false;
+}
 
-let req  = app.use('/api', (req, res, next) => {
-    if(req.query.email && req.query.pass) {
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+app.use('/api', (req, res, next) => {
+    if (req.query.email && req.query.pass) {
         console.log(req.query.email, req.query.pass);
         readFile((data) => {
-           const users = JSON.parse(data).users;
+           const users: User[] = JSON.parse(data).users;
            console.log(users);
-           const user = users.find((user) => user.email === req.query.email && user.pass === req.query.pass);
+           const user: User = users.find((singleUser: User) => singleUser.email === req.query.email
+            && singleUser.pass === req.query.pass);
            if (user) {
-            console.log(user);
-            console.log("Done!")
-            const token = jwt.sign(user, 'secret', { expiresIn: '30d' });
+            const token: string = jwt.sign(user, 'secret', { expiresIn: '30d' });
             res.status(200).json({'userID': user.id, 'jwt': token, 'userName': user.name});
            } else {
             console.log(Error('No user for login'));
             res.status(200).send({'Error': 'no user'});
            }
         });
-        }
-    else {
+        } else {
         res.status(400);
         console.log(Error('Some problem on login'));
     }
 });
 
-function findUser(email: string, pass: string): void {
-  readFile((data) => {
-       const users = JSON.parse(data).users;
-       const user = users.filter((user) => user.email === email && user.pass === pass);
-       if(user[0]) {
-        console.log(user[0]);
-       } else {
-           throw new Error('no user');
-       }
-    });
-}
-
-function findUserEvents(id: number, token: string): void {
-    const decodedJwt = jwt.verify(token, 'secret');
-    console.log('Verifiing');
-
+app.get('/', (req, res, next) => {
+  function eventsLoading(currentUserObj: User): void {
     readFile((data) => {
-       const usersEvents = JSON.parse(data).usersEvents;
-       const eventsId = usersEvents.filter((item) => item.id === id);
-       if(user[0]) {
-        console.log(user[0]);
-       } else {
-           throw new Error('no user');
-       }
-    });
-};
-
-let reqEvents  = app.get('/', (req, res, next) =>{
-  function eventsLoading(currentUserObj): void {
-    readFile((data) => {
-           const eventsUsersBase = JSON.parse(data).usersEvents.filter((item) =>
+           const eventsUsersBase: UserEventNode[] = JSON.parse(data).usersEvents.filter((item) =>
            item.userID === currentUserObj.id);
-           let eventsID = [];
+           let eventsID: Array<number> = [];
            eventsUsersBase.forEach(item => eventsID.push(item.eventID));
            console.log(eventsID);
-           const eventsBase = JSON.parse(data).events;
-           let currentUserEvents = []; 
+           const eventsBase: SingleEvent[] = JSON.parse(data).events;
+           let currentUserEvents: SingleEvent[] = [];
            eventsID.forEach((item) => {
                 eventsBase.forEach(event => {
-                    if (event.id === item) { currentUserEvents.push(event) }
+                    if (event.id === item) { currentUserEvents.push(event); }
                 });
            });
            console.log(currentUserEvents);
            res.status(200).send(currentUserEvents);
         });
     }
-    if(req.headers.authorization) {
-        let currentUser = jwt.verify(req.headers.authorization, 'secret');
+  if (req.headers.authorization) {
+        let currentUser: User = jwt.verify(req.headers.authorization, 'secret');
         eventsLoading(currentUser);
-    }
+  }
 });
 
-app.post('*/add',(req, res, next) =>{
-    console.log('Here');
+app.post('*/add', (req, res, next) => {
     readFile((data) => {
-        let parsedData = JSON.parse(data);
-        let eventsArray = parsedData.events;
-        let eventsUserArray = parsedData.usersEvents;
-        const newEventPosition = eventsArray.length;
-        const newEventUserPosition = eventsUserArray.length;
+        let parsedData: FullEventsBase = JSON.parse(data);
+        let eventsArray: SingleEvent[] = parsedData.events;
+        let eventsUserArray: UserEventNode[] = parsedData.usersEvents;
+        const newEventPosition: number = eventsArray.length;
+        const newEventUserPosition: number = eventsUserArray.length;
         eventsArray[newEventPosition] = req.body.eventInfo;
         const eventId: string = req.body.eventInfo.id;
         let {userId, id} = req.body.eventInfo;
         eventsUserArray[newEventUserPosition] = {userID: userId, eventID: id};
         parsedData.events = eventsArray;
         parsedData.usersEvents = eventsUserArray;
-        let inventedUsersData:{ [x: string]: string|number}[] = (req.body.invitedInfo)
+        let invitedUsersData: UserEventNode[] = (req.body.invitedInfo)
          .map(x => {
-         let {id} = x;
-         return {userID: id, eventID: eventId};
+         let {iD} = x;
+         return {userID: iD, eventID: eventId};
         });
-        let concatArr: {[x: string]: string|number}[] = inventedUsersData.concat(eventsUserArray);
-        let set = new Set(concatArr);
+        let concatArr: UserEventNode[] = invitedUsersData.concat(eventsUserArray);
+        let set: Set<UserEventNode> = new Set(concatArr);
         console.log('invitedUsers', concatArr);
         parsedData.usersEvents = Array.from(set);
         data = JSON.stringify(parsedData, null, 2);
@@ -151,72 +122,66 @@ app.post('*/add',(req, res, next) =>{
     });
 });
 
-app.post('*/edit',(req, res) =>{
+app.post('*/edit', (req, res) => {
   readFile((data) => {
-      let parsedData = JSON.parse(data);
+      let parsedData: FullEventsBase = JSON.parse(data);
       let index: number = null;
-      (parsedData.events).forEach((x,i) => {
+      (parsedData.events).forEach((x, i) => {
         if (x.id === req.body.event.id) { index = i; }
       });
       if (index + 1) {parsedData.events[index] = req.body.event; }
       let deletedParticipant: {[x: string]: string|number}[] = req.body.deletedUsers;
-      let arr = parsedData.usersEvents;
+      let arr: UserEventNode[] = parsedData.usersEvents;
       if (deletedParticipant.length) {
           deletedParticipant.forEach(item => {
           arr = parsedData.usersEvents.filter(x => {
-          if(x.userID === item.userID && x.eventID === item.eventID) {
+          if (x.userID === item.userID && x.eventID === item.eventID) {
             return false;
           }
           return true;
           });
         });
       }
-      console.log('arr', arr);
-      console.log('deletedUsers', deletedParticipant);
-      let set = new Set(arr);
+      let set: Set<UserEventNode> = new Set(arr);
       parsedData.usersEvents = Array.from(set);
       data = JSON.stringify(parsedData, null, 2);
       setTimeout(writeFile, 0, data, () => {
-        res.status(200).send('invent edited');
+        res.status(200).send({status: 'invent edited'});
       });
   });
 });
 
-console.log('here')
-
 app.post('*/new-user', (req, res, next) => {
   readFile((data) => {
     let parsedData: {[x: string]: {}[]} = JSON.parse(data);
-    let newUserData:{[x: string]: string|number} = req.body;
+    let newUserData: {[x: string]: string|number} = req.body;
     let usersBase: {}[] = parsedData.users;
     if (usersBase.some((item: {[x: string]: string|number}) => {
                       return item.email === newUserData.email;
-                      })){
-                        console.log('user exists');
-                        next();
+                      })) {
+                        res.status(200).send({status: 'exist'});
+                        return;
                       }
     newUserData.id =  parsedData.users.length + 1;
     parsedData.users[parsedData.users.length] = newUserData;
     data = JSON.stringify(parsedData, null, 2);
     writeFile(data, () => {
-      res.status(200).send('user created');
-  });
-
+      res.status(200).send({status: 'ok'});
+    });
   });
 });
 
-app.get('*/users-base', (req, res, next) =>{
+app.get('*/users-base', (req, res, next) => {
   readFile((data) => {
-    let usersBase = JSON.parse(data).users;
+    let usersBase: User[] = JSON.parse(data).users;
     console.log('usersData', usersBase);
     res.status(200).send(usersBase);
   });
 });
 
-
-app.get('*/users-events-base', (req, res, next) =>{
+app.get('*/users-events-base', (req, res, next) => {
   readFile((data) => {
-    let usersEventsBase = JSON.parse(data).usersEvents;
+    let usersEventsBase: UserEventNode[] = JSON.parse(data).usersEvents;
     console.log(usersEventsBase);
     res.status(200).send(usersEventsBase);
   });
@@ -224,8 +189,8 @@ app.get('*/users-events-base', (req, res, next) =>{
 
 app.post('*/delete-event', (req, res) => {
   readFile((data) => {
-    let parsedData = JSON.parse(data)
-    let usersEventsBase = parsedData.usersEvents;
+    let parsedData: FullEventsBase = JSON.parse(data);
+    let usersEventsBase: UserEventNode[] = parsedData.usersEvents;
     let {userID: delUser, eventID: delEvent} = req.body;
     parsedData.usersEvents = usersEventsBase
     .filter(x => {
@@ -235,7 +200,7 @@ app.post('*/delete-event', (req, res) => {
     data = JSON.stringify(parsedData, null, 2);
     console.log(parsedData.usersEvents);
     writeFile(data, () => {
-      res.status(200).send('event deleted');
+      res.status(200).send({status: 'event deleted'});
   });
   });
 });
