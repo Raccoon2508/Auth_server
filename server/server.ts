@@ -1,12 +1,11 @@
 import { JwtHeader } from 'jsonwebtoken';
 import { User, SingleEvent, UserEventNode, FullEventsBase } from './interfaces';
-//const bodyParser = require('body-parser');
 const bodyParser = require('body-parser');
-const cors: any = require('cors');
-const express: any = require('express');
-const fs: any = require('fs');
-const jwt: any = require('jsonwebtoken');
-const app: any = express();
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const app = express();
 app.use(cors());
 
 app.listen(3000, () => {
@@ -59,7 +58,7 @@ app.use('/api', (req, res, next) => {
             res.status(200).json({'userID': user.id, 'jwt': token, 'userName': user.name});
            } else {
             console.log(Error('No user for login'));
-            res.status(200).send({'Error': 'no user'});
+            res.status(200).send({Error: 'no user'});
            }
         });
         } else {
@@ -117,7 +116,7 @@ app.post('*/add', (req, res, next) => {
         parsedData.usersEvents = Array.from(set);
         data = JSON.stringify(parsedData, null, 2);
         writeFile(data, () => {
-          res.status(200).send('event added');
+          res.status(200).send({status: 'event added'});
         });
     });
 });
