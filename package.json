@@ -11,7 +11,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.ts"
   },
-  "keywords": ["heroku"],
+  "keywords": [
+    "heroku"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -19,7 +21,6 @@
     "@types/jsonwebtoken": "^8.3.9",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
-    "eslint": "^6.7.2",
     "express": "^4.17.1",
     "heroku": "^7.42.5",
     "jsonwebtoken": "^8.5.1",
@@ -29,6 +30,6 @@
     "typescript": "^3.8.3"
   },
   "devDependencies": {
-    "eslint": "^6.6.0"
+    "eslint": "^6.8.0"
   }
 }
