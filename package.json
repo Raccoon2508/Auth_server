@@ -2,14 +2,14 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.ts",
+  "main": "server2.ts",
   "type": "module",
   "engines": {
     "node": "12.x"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.ts"
+    "start": "ts-node-dev server2.ts"
   },
   "keywords": [
     "heroku"
