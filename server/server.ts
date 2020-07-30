@@ -1,4 +1,3 @@
-import { JwtHeader } from 'jsonwebtoken';
 import { User, SingleEvent, UserEventNode, FullEventsBase } from './interfaces';
 const bodyParser = require('body-parser');
 const express = require('express');
