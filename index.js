@@ -184,6 +184,8 @@ app.post('*/delete-event', (req, res) => {
 });
 
 app.get('*/work', (req,res) => {
-    res.body = 'OK'
-    res.status(200).send('All is Ok, masta');
+    readFile((data) => {
+        let usersBase = JSON.parse(data).users;
+        res.status(200).send(usersBase);
+    });
 })
